@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.DS_Store
+.env
+.env.*
+!.env.example
+*.log
+
+# Never commit real participant/booking exports or captured recordings
+private/
+recordings/
+exports/
