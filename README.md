@@ -1,14 +1,24 @@
 # Alley Gaitor Scheduler
 
-A booking and recording workflow for the Alley Gaitor art project.
+A booking, recording and artwork workflow for the Alley Gaitor art project.
 
 ## Current stage
 
-**Stage 2 — DTMF decoding and automatic audio segmentation.**
+**Stage 4 — Netlify/security skeleton.**
 
-Stage 1 proved the browser can generate deterministic DTMF start/end markers. The first real Android recording test then successfully recovered both markers from AAC/M4A audio, including the recording code and checksum.
+The DTMF protocol has survived both a basic Android recording test and a genuine bicycle-walk recording with spoke clicks. The application now also has a structured booking/participant model and a phone-first operator view.
 
-Each participant always has their own bicycle recording. A booking may contain several participants, and those recordings can later be visualised individually or combined.
+The current work moves deployment from a static-only model toward a secure application boundary:
+
+```text
+browser on Netlify
+      ↓
+Netlify Functions (/api/*)
+      ↓
+PostgreSQL database (not connected yet)
+```
+
+GitHub remains the public source-code repository. Real participant data and secrets must never be committed.
 
 ## DTMF protocol
 
@@ -35,15 +45,14 @@ START: ##*#1482319#*##
 END:   ##*#2482310#*##
 ```
 
-The protocol is intentionally easy to change after further physical testing.
-
-## Run the operator prototype on your Mac
+## Run locally on your Mac
 
 Requirements:
 
 - Node.js 20 or newer
 - npm
-- VS Code is optional but recommended
+- Python 3 for the decoder
+- ffmpeg for phone audio formats
 
 ```bash
 git clone https://github.com/desdodec/alley__gaitor_scheduler.git
@@ -53,77 +62,73 @@ npm test
 npm run dev
 ```
 
-Vite will print a local URL, normally `http://localhost:5173`.
-
-To test on an iPhone on the same Wi-Fi network, run:
-
-```bash
-npm run dev -- --host
-```
-
-Then open the LAN URL that Vite prints on the iPhone.
-
-## Decode an Android recording
-
-The Stage 2 decoder is deliberately lightweight. It uses Python's standard library for DTMF detection and `ffmpeg` only for reading phone formats such as `.m4a` and extracting session WAV files.
-
-On macOS, install ffmpeg if needed:
+Install ffmpeg on macOS if needed:
 
 ```bash
 brew install ffmpeg
 ```
 
-Then decode a recording:
+## Decode an Android recording
 
 ```bash
 python3 scripts/decode_dtmf.py "/path/to/recording.m4a"
 ```
 
-To also extract every successfully paired START/END session as a WAV file:
+Extract successfully paired sessions as WAV files:
 
 ```bash
 python3 scripts/decode_dtmf.py "/path/to/recording.m4a" --extract output_sessions
 ```
 
-The decoder prints JSON containing detected markers, checksum status and paired recording sessions.
+## Netlify deployment
 
-## First real-world result
+The repo now contains `netlify.toml` and a server-side health function.
 
-The first Android test file was a 14.26-second mono AAC/M4A recording at 44.1 kHz. The decoder recovered:
+In Netlify:
 
-```text
-START recording 48231, checksum 9: valid
-END   recording 48231, checksum 0: valid
+1. Add a new site by importing this GitHub repository.
+2. Use the `main` branch.
+3. Netlify should detect:
+   - build command: `npm run build`
+   - publish directory: `dist`
+   - functions directory: `netlify/functions`
+4. Deploy the site.
+5. Visit `/api/health` on the deployed site.
+
+A healthy Stage 4 deployment returns JSON similar to:
+
+```json
+{
+  "ok": true,
+  "service": "alley-gaitor-scheduler",
+  "stage": "4-security-skeleton",
+  "databaseConfigured": false
+}
 ```
 
-The usable content between those markers was approximately 3.2 seconds. This confirms that the current DTMF frequencies and conservative tone timing survive the tested Android recording/compression path.
+`databaseConfigured` remains false until a real database is selected and `DATABASE_URL` is added in Netlify's environment-variable settings.
 
-Important: this is a successful first test, not yet proof of reliability in noisy exhibition conditions. The next physical tests should include bicycle clicks, speech, greater phone distance and lower playback volume.
+Do **not** put database passwords or other secrets in `netlify.toml`, source code or GitHub. Runtime secrets belong in Netlify environment variables.
 
-## Physical test procedure
+## Privacy/security design
 
-1. Start a fresh recording on the Android phone attached to the bicycle.
-2. Open the operator page on the iPhone.
-3. Put the phones in the positions expected during the real project.
-4. Tap **SPOT / START** for a participant.
-5. Walk the bicycle with the cable tie clicking against the spokes.
-6. Tap **END SESSION**.
-7. Repeat for other participants.
-8. Stop the Android recording and keep the original audio unchanged.
-9. Run `scripts/decode_dtmf.py` against the original recording.
+See [`docs/security-and-privacy.md`](docs/security-and-privacy.md).
+
+The draft PostgreSQL schema is in [`db/schema.sql`](db/schema.sql). It deliberately separates booking/contact/delivery data from participant recording identifiers so identifying data can later be deleted without destroying the non-identifying artistic dataset.
 
 ## Planned stages
 
 1. DTMF generator + protocol tests — **complete**
-2. DTMF decoder + automatic audio segmentation — **in progress**
-3. Booking, participant and recording data model
-4. Public scheduler + cancellation/rescheduling
-5. Operator dashboard for iPhone
-6. Artwork/visualisation choices
-7. Payment and T-shirt order model
-8. Email confirmations/reminders
-9. Print-on-demand fulfilment integration
+2. DTMF decoder + real bicycle recording validation — **complete in principle; continue stress testing**
+3. Booking, participant and recording model + operator UI — **prototype complete**
+4. Netlify/server API/security baseline — **in progress**
+5. Persistent database + authenticated operator access
+6. Public scheduler + cancellation/rescheduling
+7. Artwork/visualisation choices
+8. Payment and T-shirt order model
+9. Email confirmations/reminders
+10. Print-on-demand fulfilment integration
 
-## Privacy
+## Privacy reminder
 
-The repository is public. Never commit participant names, addresses, email addresses, phone numbers, payment data or real booking exports. Production secrets and personal data must live outside Git.
+The repository is public. Never commit participant names, addresses, email addresses, phone numbers, payment data, production credentials, real booking exports or private recordings.
