@@ -56,14 +56,11 @@ function mountCalendar(form) {
 
   startsAt.type = 'hidden';
   startsAt.required = true;
-  originalLabel.childNodes.forEach((node) => {
-    if (node.nodeType === Node.TEXT_NODE) node.textContent = '';
-  });
   originalLabel.style.display = 'none';
   if (note?.classList.contains('field-note')) note.style.display = 'none';
 
   const host = document.createElement('section');
-  host.className = 'scheduler-picker';
+  host.className = 'scheduler-picker compact';
   originalLabel.before(host);
 
   const today = londonTodayParts();
@@ -74,6 +71,7 @@ function mountCalendar(form) {
   let viewMonth = today.month - 1;
   let selectedDate = '';
   let selectedStartsAt = '';
+  let calendarOpen = false;
   let loading = false;
   let slots = [];
   let durationMinutes = 5;
@@ -93,7 +91,7 @@ function mountCalendar(form) {
     return candidateKey >= minKey && candidateKey <= maxKey;
   }
 
-  function render() {
+  function calendarMarkup() {
     const { days, mondayIndex } = monthBounds();
     const cells = [];
     for (let i = 0; i < mondayIndex; i += 1) cells.push('<span class="calendar-blank"></span>');
@@ -107,39 +105,80 @@ function mountCalendar(form) {
       `);
     }
 
+    return `
+      <div class="calendar-modal" role="dialog" aria-modal="true" aria-label="Choose session date">
+        <button type="button" class="calendar-backdrop" data-close-calendar aria-label="Close calendar"></button>
+        <div class="calendar-dialog">
+          <div class="calendar-dialog-heading">
+            <div>
+              <span class="field-title">Choose a date</span>
+              <p class="field-note">Available times will appear after you choose a day.</p>
+            </div>
+            <button type="button" class="calendar-close" data-close-calendar aria-label="Close calendar">×</button>
+          </div>
+          <div class="calendar-card">
+            <div class="calendar-toolbar">
+              <button type="button" class="calendar-nav" data-month="-1" ${canMove(-1) ? '' : 'disabled'} aria-label="Previous month">←</button>
+              <strong>${MONTHS[viewMonth]} ${viewYear}</strong>
+              <button type="button" class="calendar-nav" data-month="1" ${canMove(1) ? '' : 'disabled'} aria-label="Next month">→</button>
+            </div>
+            <div class="calendar-weekdays">${WEEKDAYS.map((day) => `<span>${day}</span>`).join('')}</div>
+            <div class="calendar-grid">${cells.join('')}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function render() {
+    const selectedLabel = selectedDate ? formatChosenDate(selectedDate) : 'Choose a date';
+
     host.innerHTML = `
-      <div class="scheduler-heading">
+      <div class="scheduler-heading compact-heading">
         <div>
-          <span class="field-title">Choose a session</span>
-          <p class="field-note">Times shown are live availability. Session length adjusts to the number of participants.</p>
+          <span class="field-title">Session date and time</span>
+          <p class="field-note">Session length adjusts to the number of participants.</p>
         </div>
         <span class="duration-chip">${durationMinutes} min</span>
       </div>
 
-      <div class="calendar-card">
-        <div class="calendar-toolbar">
-          <button type="button" class="calendar-nav" data-month="-1" ${canMove(-1) ? '' : 'disabled'} aria-label="Previous month">←</button>
-          <strong>${MONTHS[viewMonth]} ${viewYear}</strong>
-          <button type="button" class="calendar-nav" data-month="1" ${canMove(1) ? '' : 'disabled'} aria-label="Next month">→</button>
-        </div>
-        <div class="calendar-weekdays">${WEEKDAYS.map((day) => `<span>${day}</span>`).join('')}</div>
-        <div class="calendar-grid">${cells.join('')}</div>
-      </div>
+      <button type="button" class="date-trigger ${selectedDate ? 'has-value' : ''}" id="choose-date-button">
+        <span>${selectedLabel}</span>
+        <strong>${selectedDate ? 'Change date' : 'Choose date'} →</strong>
+      </button>
 
       <div class="slot-panel">
         ${!selectedDate ? '<p class="slot-hint">Choose a date to see available times.</p>' : `
-          <div class="slot-title"><strong>${formatChosenDate(selectedDate)}</strong></div>
           ${loading ? '<p class="slot-hint">Checking availability…</p>' : slots.length ? `
+            <div class="slot-title"><strong>Available times</strong></div>
             <div class="slot-grid">
               ${slots.map((slot) => `<button type="button" class="slot-button ${selectedStartsAt === slot.startsAt ? 'selected' : ''}" data-slot="${slot.startsAt}">${slot.label}</button>`).join('')}
             </div>
-          ` : '<p class="slot-hint">No available times on this date. Please choose another day.</p>'}
+          ` : '<p class="slot-hint">No available times on this date. Choose another date.</p>'}
         `}
       </div>
+
       <div class="selected-slot" aria-live="polite">
         ${selectedStartsAt ? `Selected: <strong>${formatChosenDate(selectedDate)} at ${slots.find((slot) => slot.startsAt === selectedStartsAt)?.label || ''}</strong>` : ''}
       </div>
+
+      ${calendarOpen ? calendarMarkup() : ''}
     `;
+
+    host.querySelector('#choose-date-button')?.addEventListener('click', () => {
+      calendarOpen = true;
+      if (selectedDate) {
+        const [year, month] = selectedDate.split('-').map(Number);
+        viewYear = year;
+        viewMonth = month - 1;
+      }
+      render();
+    });
+
+    host.querySelectorAll('[data-close-calendar]').forEach((button) => button.addEventListener('click', () => {
+      calendarOpen = false;
+      render();
+    }));
 
     host.querySelectorAll('[data-month]').forEach((button) => button.addEventListener('click', () => {
       const delta = Number(button.dataset.month);
@@ -154,6 +193,7 @@ function mountCalendar(form) {
       selectedDate = button.dataset.calendarDate;
       selectedStartsAt = '';
       startsAt.value = '';
+      calendarOpen = false;
       await loadSlots();
     }));
 
@@ -191,6 +231,13 @@ function mountCalendar(form) {
     startsAt.value = '';
     if (selectedDate) await loadSlots();
     else render();
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && calendarOpen) {
+      calendarOpen = false;
+      render();
+    }
   });
 
   render();
