@@ -138,16 +138,18 @@ async function renderManage() {
 }
 
 function relabelUi() {
-  if (location.pathname === '/operator') {
+  if (location.pathname === '/operator' || location.pathname === '/sessions') {
     document.querySelectorAll('.eyebrow').forEach((node) => {
-      if (node.textContent.includes('OPERATOR')) node.textContent = 'ALLEY GAITOR / SESSION CONTROL';
+      if (node.textContent.includes('OPERATOR') && node.textContent !== 'ALLEY GAITOR / SESSION CONTROL') {
+        node.textContent = 'ALLEY GAITOR / SESSION CONTROL';
+      }
     });
   }
 
   if (location.pathname === '/') {
     const operatorLink = [...document.querySelectorAll('a')].find((link) => link.getAttribute('href') === '/operator');
     if (operatorLink) {
-      operatorLink.textContent = 'RUN SESSIONS';
+      if (operatorLink.textContent !== 'RUN SESSIONS') operatorLink.textContent = 'RUN SESSIONS';
       const parent = operatorLink.parentElement;
       if (parent && !parent.querySelector('a[href="/manage"]')) {
         const manage = document.createElement('a');
@@ -163,6 +165,15 @@ function relabelUi() {
 if (location.pathname === '/manage') {
   renderManage();
 } else {
-  new MutationObserver(relabelUi).observe(document.documentElement, { childList: true, subtree: true });
+  let scheduled = false;
+  const observer = new MutationObserver(() => {
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(() => {
+      scheduled = false;
+      relabelUi();
+    });
+  });
+  observer.observe(document.documentElement, { childList: true, subtree: true });
   relabelUi();
 }
