@@ -1,10 +1,15 @@
+import { pingDb } from '../lib/db.mjs';
+
 export default async () => {
+  const database = await pingDb();
+
   return Response.json(
     {
       ok: true,
       service: 'alley-gaitor-scheduler',
-      stage: '4-security-skeleton',
-      databaseConfigured: Boolean(process.env.DATABASE_URL),
+      stage: '5-persistent-bookings',
+      databaseConfigured: database.configured,
+      databaseReachable: database.reachable,
     },
     {
       status: 200,
