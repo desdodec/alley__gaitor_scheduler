@@ -9,7 +9,8 @@ export function getDb() {
 
   if (!client) {
     client = postgres(process.env.DATABASE_URL, {
-      max: 3,
+      max: 1,
+      prepare: false,
       idle_timeout: 20,
       connect_timeout: 10,
       ssl: 'require',
