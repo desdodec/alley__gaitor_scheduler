@@ -147,16 +147,18 @@ function mountCalendar(form) {
         <strong>${selectedDate ? 'Change date' : 'Choose date'} →</strong>
       </button>
 
-      <div class="slot-panel">
-        ${!selectedDate ? '<p class="slot-hint">Choose a date to see available times.</p>' : `
-          ${loading ? '<p class="slot-hint">Checking availability…</p>' : slots.length ? `
-            <div class="slot-title"><strong>Available times</strong></div>
-            <div class="slot-grid">
-              ${slots.map((slot) => `<button type="button" class="slot-button ${selectedStartsAt === slot.startsAt ? 'selected' : ''}" data-slot="${slot.startsAt}">${slot.label}</button>`).join('')}
-            </div>
-          ` : '<p class="slot-hint">No available times on this date. Choose another date.</p>'}
-        `}
-      </div>
+      ${selectedStartsAt ? '' : `
+        <div class="slot-panel">
+          ${!selectedDate ? '<p class="slot-hint">Choose a date to see available times.</p>' : `
+            ${loading ? '<p class="slot-hint">Checking availability…</p>' : slots.length ? `
+              <div class="slot-title"><strong>Available times</strong></div>
+              <div class="slot-grid">
+                ${slots.map((slot) => `<button type="button" class="slot-button" data-slot="${slot.startsAt}">${slot.label}</button>`).join('')}
+              </div>
+            ` : '<p class="slot-hint">No available times on this date. Choose another date.</p>'}
+          `}
+        </div>
+      `}
 
       <div class="selected-slot" aria-live="polite">
         ${selectedStartsAt ? `Selected: <strong>${formatChosenDate(selectedDate)} at ${slots.find((slot) => slot.startsAt === selectedStartsAt)?.label || ''}</strong>` : ''}
