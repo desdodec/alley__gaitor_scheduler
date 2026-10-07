@@ -4,21 +4,53 @@ A booking, recording and artwork workflow for the Alley Gaitor art project.
 
 ## Current stage
 
-**Stage 4 — Netlify/security skeleton.**
+The project now has a live Netlify deployment with a connected PostgreSQL database, public booking flow, helper/session tooling, helper-access management, and booking confirmation email delivery.
 
-The DTMF protocol has survived both a basic Android recording test and a genuine bicycle-walk recording with spoke clicks. The application now also has a structured booking/participant model and a phone-first operator view.
-
-The current work moves deployment from a static-only model toward a secure application boundary:
+Current live architecture:
 
 ```text
 browser on Netlify
       ↓
 Netlify Functions (/api/*)
       ↓
-PostgreSQL database (not connected yet)
+PostgreSQL database
+      ↓
+Resend transactional email
 ```
 
 GitHub remains the public source-code repository. Real participant data and secrets must never be committed.
+
+## Live site
+
+Primary deployment:
+
+```text
+https://alleygaitor.netlify.app/
+```
+
+Important live routes:
+
+```text
+/                   public homepage
+/book               public booking flow
+/sessions.html      helper/session operator page
+/access.html        helper-access management page
+/api/health         deployment/database/email health check
+```
+
+## Frontend structure
+
+Do not assume all frontend functionality lives in `src/main.js`.
+
+Sensitive or newer functionality is intentionally isolated into standalone pages so a change to one area is less likely to regress the rest of the application:
+
+```text
+sessions.html  → src/sessions.js
+access.html    → src/access.js
+legacy SPA routes and shared public UI → src/main.js
+```
+
+This separation is intentional and should be preserved unless there is a strong architectural reason to change it.
 
 ## DTMF protocol
 
@@ -44,6 +76,8 @@ Example for recording code `48231`:
 START: ##*#1482319#*##
 END:   ##*#2482310#*##
 ```
+
+The protocol has survived both a basic Android recording test and a genuine bicycle-walk recording with spoke clicks. Continue stress-testing it in realistic outdoor conditions.
 
 ## Run locally on your Mac
 
@@ -80,55 +114,111 @@ Extract successfully paired sessions as WAV files:
 python3 scripts/decode_dtmf.py "/path/to/recording.m4a" --extract output_sessions
 ```
 
-## Netlify deployment
+## Deployment
 
-The repo now contains `netlify.toml` and a server-side health function.
+The Netlify deployment uses:
 
-In Netlify:
+```text
+build command:      npm run build
+publish directory:  dist
+functions directory: netlify/functions
+branch:             main
+```
 
-1. Add a new site by importing this GitHub repository.
-2. Use the `main` branch.
-3. Netlify should detect:
-   - build command: `npm run build`
-   - publish directory: `dist`
-   - functions directory: `netlify/functions`
-4. Deploy the site.
-5. Visit `/api/health` on the deployed site.
+Runtime secrets and production credentials belong in Netlify environment variables, never in GitHub.
 
-A healthy Stage 4 deployment returns JSON similar to:
+The health endpoint should report these key states as `true` on a healthy production deployment:
 
 ```json
 {
-  "ok": true,
-  "service": "alley-gaitor-scheduler",
-  "stage": "4-security-skeleton",
-  "databaseConfigured": false
+  "databaseConfigured": true,
+  "databaseReachable": true,
+  "resendApiKeyConfigured": true,
+  "bookingEmailFromConfigured": true,
+  "emailConfigured": true
 }
 ```
 
-`databaseConfigured` remains false until a real database is selected and `DATABASE_URL` is added in Netlify's environment-variable settings.
+The configured booking email sender is:
 
-Do **not** put database passwords or other secrets in `netlify.toml`, source code or GitHub. Runtime secrets belong in Netlify environment variables.
+```text
+Alley Gaitor <bookings@tessellation.co.uk>
+```
 
-## Privacy/security design
+The Resend domain `tessellation.co.uk` has been verified and successful booking confirmation email delivery has already been demonstrated.
+
+## Live smoke testing
+
+Before making application changes, verify the current production baseline.
+
+Run the non-destructive live checks with:
+
+```bash
+npm run smoke:live
+```
+
+This checks:
+
+- homepage responds
+- `/book` responds
+- `sessions.html` responds and contains Home navigation
+- `access.html` responds
+- `/api/health` responds
+- all required database/email health flags are `true`
+
+The script intentionally does not create bookings, alter production data, or send email.
+
+Manual checks still required when validating booking behaviour:
+
+- homepage `RUN SESSIONS` control is visible and works
+- booking calendar/date selection works
+- a test booking can be created
+- booking confirmation email is received
+
+If GitHub and the live site appear out of sync:
+
+1. check Netlify deploy status
+2. confirm the latest `main` commit was deployed
+3. hard-refresh or reopen the browser before assuming the code is broken
+
+## GitHub Pages
+
+The repository also contains a GitHub Actions workflow that builds and deploys the Vite frontend to GitHub Pages. This is useful for static/offline experiments, but Netlify remains the production deployment because the production application depends on Netlify Functions, PostgreSQL, and server-side email configuration.
+
+## Privacy and security
 
 See [`docs/security-and-privacy.md`](docs/security-and-privacy.md).
 
-The draft PostgreSQL schema is in [`db/schema.sql`](db/schema.sql). It deliberately separates booking/contact/delivery data from participant recording identifiers so identifying data can later be deleted without destroying the non-identifying artistic dataset.
+The PostgreSQL schema is in [`db/schema.sql`](db/schema.sql). It deliberately separates booking/contact/delivery data from participant recording identifiers so identifying data can later be deleted without destroying the non-identifying artistic dataset.
 
-## Planned stages
+Do not commit:
+
+- participant names
+- addresses
+- email addresses
+- phone numbers
+- payment data
+- production credentials
+- real booking exports
+- private recordings
+
+## Current capability status
 
 1. DTMF generator + protocol tests — **complete**
-2. DTMF decoder + real bicycle recording validation — **complete in principle; continue stress testing**
-3. Booking, participant and recording model + operator UI — **prototype complete**
-4. Netlify/server API/security baseline — **in progress**
-5. Persistent database + authenticated operator access
-6. Public scheduler + cancellation/rescheduling
-7. Artwork/visualisation choices
-8. Payment and T-shirt order model
-9. Email confirmations/reminders
-10. Print-on-demand fulfilment integration
+2. DTMF decoder + real bicycle recording validation — **working; continue stress testing**
+3. Booking, participant and recording model + operator UI — **implemented**
+4. Netlify/server API/security baseline — **implemented**
+5. Persistent PostgreSQL database — **implemented and reachable in production**
+6. Public scheduler — **implemented**
+7. Helper/session operator page — **implemented**
+8. Helper-access management — **implemented**
+9. Booking confirmation email — **implemented and successfully delivered**
+10. Cancellation/rescheduling — **future work / verify before relying on it**
+11. Artwork/visualisation choices — **future work**
+12. Payment and T-shirt order model — **future work**
+13. Reminder email workflow — **future work**
+14. Print-on-demand fulfilment integration — **future work**
 
 ## Privacy reminder
 
-The repository is public. Never commit participant names, addresses, email addresses, phone numbers, payment data, production credentials, real booking exports or private recordings.
+The repository is public. Never commit participant data, secrets, credentials, private recordings, or production exports.
