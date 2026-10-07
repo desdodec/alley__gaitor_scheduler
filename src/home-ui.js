@@ -27,7 +27,7 @@ function homeMarkup() {
       <header class="topbar home-topbar">
         <img class="home-logo" src="/assets/images/Alley%20Gaitor%20Cycling%20Logo%20Banner.png" alt="Alley Gaitor">
         <p class="home-intro">Alley Gaitor turns the way you walk into a kind of secret drawing.</p>
-        <a class="action-link primary-link home-book-link" href="/book" data-route>BOOK A SESSION</a>
+        <a class="action-link primary-link home-book-link" href="/book">BOOK A SESSION</a>
       </header>
 
       <section class="home-video-section" aria-label="How Alley Gaitor captures your walk">
