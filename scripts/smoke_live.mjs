@@ -61,6 +61,7 @@ async function checkHealth() {
       'resendApiKeyConfigured',
       'bookingEmailFromConfigured',
       'emailConfigured',
+      'bookingManageConfigured',
     ];
 
     const badKeys = requiredTrue.filter((key) => health[key] !== true);
@@ -82,13 +83,17 @@ await fetchText('/', 'homepage', 'Alley Gaitor');
 await fetchText('/book', 'booking page', 'Alley Gaitor');
 await fetchText('/sessions.html', 'sessions page + Home navigation', '>HOME</a>');
 await fetchText('/access.html', 'access management page', 'Manage access');
+await fetchText('/manage.html', 'participant manage booking page', 'Manage booking');
 await checkHealth();
 
 console.log('\nManual browser checks still required:');
 console.log('- homepage RUN SESSIONS button is visible and works');
 console.log('- booking calendar/date selection works');
 console.log('- a test booking can be created when an intentional data-writing test is appropriate');
-console.log('- confirmation email delivery is verified when an intentional booking test is run');
+console.log('- confirmation email contains the secure Manage booking link');
+console.log('- manage link opens the correct booking without an account');
+console.log('- reschedule moves the booking and sends a confirmation email');
+console.log('- cancel changes the booking status and sends a confirmation email');
 
 if (failures.length > 0) {
   console.error(`\n${failures.length} smoke check(s) failed.`);
