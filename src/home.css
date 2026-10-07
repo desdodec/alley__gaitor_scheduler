@@ -196,6 +196,13 @@
   padding: 14px 16px;
 }
 
+@media (max-width: 639px) {
+  .home-shell {
+    padding-left: max(18px, env(safe-area-inset-left));
+    padding-right: max(18px, env(safe-area-inset-right));
+  }
+}
+
 @media (max-width: 480px) {
   .home-story {
     padding: 16px;
