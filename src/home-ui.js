@@ -64,7 +64,7 @@ function homeMarkup() {
       <section class="home-gallery" aria-labelledby="artwork-title">
         <div class="home-section-heading">
           <p class="eyebrow">FROM RHYTHM TO IMAGE</p>
-          <h2 id="artwork-title">One walk. Many possible drawings.</h2>
+          <h2 id="artwork-title">One walk. Many possible patterns.</h2>
         </div>
 
         <div class="slideshow" aria-live="polite">
