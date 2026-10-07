@@ -25,9 +25,9 @@ function homeMarkup() {
   return `
     <main class="shell home-shell">
       <header class="topbar home-topbar">
-        <p class="eyebrow">ALLEY GAITOR</p>
-        <h1>Walk it.<br>Draw it.</h1>
+        <img class="home-logo" src="/assets/images/Alley%20Gaitor_Logo.png" alt="Alley Gaitor">
         <p class="home-intro">Alley Gaitor turns the way you walk into a kind of secret drawing.</p>
+        <a class="action-link primary-link home-book-link" href="/book" data-route>BOOK A SESSION</a>
       </header>
 
       <section class="home-video-section" aria-labelledby="how-it-works-title">
@@ -88,11 +88,7 @@ function homeMarkup() {
         </div>
       </section>
 
-      <section class="card home-cta">
-        <p class="eyebrow">MAKE YOURS</p>
-        <h2 class="section-title">Book a bicycle walk session.</h2>
-        <p class="subtle">A short session captures the rhythm we use to create your artwork.</p>
-        <a class="action-link primary-link" href="/book" data-route>BOOK A SESSION</a>
+      <section class="home-footer-actions">
         <a class="action-link secondary-link" href="/sessions.html">RUN SESSIONS</a>
       </section>
     </main>
