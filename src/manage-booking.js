@@ -150,14 +150,15 @@ async function loadSlots(dateString) {
 
     status.textContent = `${data.slots.length} available time${data.slots.length === 1 ? '' : 's'}.`;
     list.innerHTML = data.slots.map((slot) => `
-      <button class="small-button slot-button" type="button" data-start="${escapeHtml(slot.startsAt)}">${escapeHtml(slot.label)}</button>
+      <button class="small-button slot-button" type="button" data-start="${escapeHtml(slot.startsAt)}" data-label="${escapeHtml(slot.label)}">${escapeHtml(slot.label)}</button>
     `).join('');
 
     list.querySelectorAll('[data-start]').forEach((slotButton) => {
       slotButton.addEventListener('click', () => {
-        list.querySelectorAll('[data-start]').forEach((item) => item.removeAttribute('aria-pressed'));
-        slotButton.setAttribute('aria-pressed', 'true');
         selectedStart = slotButton.dataset.start;
+        status.className = 'status';
+        status.textContent = `Selected ${slotButton.dataset.label}.`;
+        list.innerHTML = '';
         button.disabled = false;
       });
     });
