@@ -25,7 +25,7 @@ function homeMarkup() {
   return `
     <main class="shell home-shell">
       <header class="topbar home-topbar">
-        <img class="home-logo" src="/assets/images/Alley%20Gaitor%20Cycling%20Logo%20Banner.png" alt="Alley Gaitor">
+        <img class="home-logo" src="/assets/images/Alley%20Gaitor%20Cycling%20Brand%20Banner.png" alt="Alley Gaitor">
         <p class="home-intro">Alley Gaitor turns the way you walk into a kind of secret drawing.</p>
         <a class="action-link primary-link home-book-link" href="/book">BOOK A SESSION</a>
       </header>
