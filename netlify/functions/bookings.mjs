@@ -173,14 +173,22 @@ export default async (request) => {
       return booking;
     });
 
-    let email = { sent: false, reason: 'not_attempted' };
+    let manageUrl = null;
     try {
       const manageToken = createBookingManageToken({
         bookingId: result.id,
         reference: result.public_reference,
       });
-      const manageUrl = `${new URL(request.url).origin}/manage.html#token=${encodeURIComponent(manageToken)}`;
+      manageUrl = `${new URL(request.url).origin}/manage.html#token=${encodeURIComponent(manageToken)}`;
+    } catch (error) {
+      console.error('booking manage link unavailable', {
+        bookingReference: result.public_reference,
+        message: error?.message,
+      });
+    }
 
+    let email = { sent: false, reason: 'not_attempted' };
+    try {
       email = await sendBookingConfirmation({
         to: cleanString(body.leadEmail, 200).toLowerCase(),
         leadName: cleanString(body.leadName, 120),
