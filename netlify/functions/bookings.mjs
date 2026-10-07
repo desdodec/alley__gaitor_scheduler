@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { getDb, json } from './_db.mjs';
+import { sendBookingConfirmation } from './_email.mjs';
 
 const RELATIONSHIPS = new Set(['individual', 'family', 'friends', 'colleagues', 'other']);
 const ARTWORK_MODES = new Set(['individual', 'group']);
@@ -171,6 +172,27 @@ export default async (request) => {
       return booking;
     });
 
+    let email = { sent: false, reason: 'not_attempted' };
+    try {
+      email = await sendBookingConfirmation({
+        to: cleanString(body.leadEmail, 200).toLowerCase(),
+        leadName: cleanString(body.leadName, 120),
+        reference: result.public_reference,
+        startsAt: result.starts_at,
+        durationMinutes: result.duration_minutes,
+        participants: participants.map((participant) => ({
+          artworkName: cleanString(participant.artworkName, 80),
+        })),
+      });
+    } catch (error) {
+      console.error('booking confirmation email failed', {
+        bookingReference: result.public_reference,
+        status: error?.status,
+        details: error?.details,
+      });
+      email = { sent: false, reason: 'send_failed' };
+    }
+
     return json({
       booking: {
         reference: result.public_reference,
@@ -178,6 +200,7 @@ export default async (request) => {
         durationMinutes: result.duration_minutes,
         participantCount: participants.length,
       },
+      email,
     }, 201);
   } catch (error) {
     console.error('booking creation failed', error);
