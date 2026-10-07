@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { getDb, json } from './_db.mjs';
+import { createBookingManageToken } from './_booking-manage-auth.mjs';
 import { sendBookingConfirmation } from './_email.mjs';
 
 const RELATIONSHIPS = new Set(['individual', 'family', 'friends', 'colleagues', 'other']);
@@ -174,6 +175,12 @@ export default async (request) => {
 
     let email = { sent: false, reason: 'not_attempted' };
     try {
+      const manageToken = createBookingManageToken({
+        bookingId: result.id,
+        reference: result.public_reference,
+      });
+      const manageUrl = `${new URL(request.url).origin}/manage.html#token=${encodeURIComponent(manageToken)}`;
+
       email = await sendBookingConfirmation({
         to: cleanString(body.leadEmail, 200).toLowerCase(),
         leadName: cleanString(body.leadName, 120),
@@ -183,6 +190,7 @@ export default async (request) => {
         participants: participants.map((participant) => ({
           artworkName: cleanString(participant.artworkName, 80),
         })),
+        manageUrl,
       });
     } catch (error) {
       console.error('booking confirmation email failed', {
