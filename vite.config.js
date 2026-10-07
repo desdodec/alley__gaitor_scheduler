@@ -11,6 +11,7 @@ export default defineConfig({
         main: resolve(process.cwd(), 'index.html'),
         sessions: resolve(process.cwd(), 'sessions.html'),
         access: resolve(process.cwd(), 'access.html'),
+        manage: resolve(process.cwd(), 'manage.html'),
       },
     },
   },
