@@ -215,7 +215,7 @@ async function submitBooking(event) {
         <h2>${escapeHtml(result.booking.reference)}</h2>
         <p>${new Date(result.booking.startsAt).toLocaleString('en-GB', { dateStyle: 'full', timeStyle: 'short' })}</p>
         <p>${result.booking.participantCount} participant${result.booking.participantCount === 1 ? '' : 's'} · ${result.booking.durationMinutes} minute slot</p>
-        <p class="subtle">Keep the booking reference. Email confirmation will be added in a later stage.</p>
+        <p class="subtle">Keep the booking reference. A confirmation email has been sent with a secure link to manage, reschedule or cancel your booking.</p>
         <a class="action-link secondary-link" href="/" data-route>DONE</a>
       </div>`;
   } catch (error) {
