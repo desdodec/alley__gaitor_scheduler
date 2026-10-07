@@ -10,6 +10,9 @@ export default async () => {
       stage: '5-persistent-bookings',
       databaseConfigured: database.configured,
       databaseReachable: database.reachable,
+      resendApiKeyConfigured: Boolean(process.env.RESEND_API_KEY),
+      bookingEmailFromConfigured: Boolean(process.env.BOOKING_EMAIL_FROM),
+      emailConfigured: Boolean(process.env.RESEND_API_KEY && process.env.BOOKING_EMAIL_FROM),
     },
     {
       status: 200,
