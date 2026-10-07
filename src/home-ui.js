@@ -25,15 +25,14 @@ function homeMarkup() {
   return `
     <main class="shell home-shell">
       <header class="topbar home-topbar">
-        <img class="home-logo" src="/assets/images/Alley%20Gaitor_Logo.png" alt="Alley Gaitor">
+        <img class="home-logo" src="/assets/images/Alley%20Gaitor%20Cycling%20Logo%20Banner.png" alt="Alley Gaitor">
         <p class="home-intro">Alley Gaitor turns the way you walk into a kind of secret drawing.</p>
         <a class="action-link primary-link home-book-link" href="/book" data-route>BOOK A SESSION</a>
       </header>
 
-      <section class="home-video-section" aria-labelledby="how-it-works-title">
+      <section class="home-video-section" aria-label="How Alley Gaitor captures your walk">
         <div class="home-section-heading">
           <p class="eyebrow">HOW IT STARTS</p>
-          <h2 id="how-it-works-title">Your walk becomes data.</h2>
         </div>
         <div class="home-video-frame">
           <video
