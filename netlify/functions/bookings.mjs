@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import { getDb, json } from './_db.mjs';
 import { createBookingManageToken } from './_booking-manage-auth.mjs';
 import { sendBookingConfirmation } from './_email.mjs';
+import { sendAdminBookingNotification } from './_admin-booking-email.mjs';
 
 const RELATIONSHIPS = new Set(['individual', 'family', 'friends', 'colleagues', 'other']);
 const ARTWORK_MODES = new Set(['individual', 'group']);
@@ -187,17 +188,22 @@ export default async (request) => {
       });
     }
 
+    const cleanedParticipants = participants.map((participant) => ({
+      artworkName: cleanString(participant.artworkName, 80),
+    }));
+    const leadName = cleanString(body.leadName, 120);
+    const leadEmail = cleanString(body.leadEmail, 200).toLowerCase();
+    const leadPhone = cleanString(body.leadPhone, 50) || null;
+
     let email = { sent: false, reason: 'not_attempted' };
     try {
       email = await sendBookingConfirmation({
-        to: cleanString(body.leadEmail, 200).toLowerCase(),
-        leadName: cleanString(body.leadName, 120),
+        to: leadEmail,
+        leadName,
         reference: result.public_reference,
         startsAt: result.starts_at,
         durationMinutes: result.duration_minutes,
-        participants: participants.map((participant) => ({
-          artworkName: cleanString(participant.artworkName, 80),
-        })),
+        participants: cleanedParticipants,
         manageUrl,
       });
     } catch (error) {
@@ -209,6 +215,28 @@ export default async (request) => {
       email = { sent: false, reason: 'send_failed' };
     }
 
+    let adminEmail = { sent: false, reason: 'not_attempted' };
+    try {
+      adminEmail = await sendAdminBookingNotification({
+        reference: result.public_reference,
+        startsAt: result.starts_at,
+        durationMinutes: result.duration_minutes,
+        leadName,
+        leadEmail,
+        leadPhone,
+        relationship: body.relationship,
+        artworkMode: body.artworkMode,
+        participants: cleanedParticipants,
+      });
+    } catch (error) {
+      console.error('admin booking notification failed', {
+        bookingReference: result.public_reference,
+        status: error?.status,
+        details: error?.details,
+      });
+      adminEmail = { sent: false, reason: 'send_failed' };
+    }
+
     return json({
       booking: {
         reference: result.public_reference,
@@ -217,6 +245,7 @@ export default async (request) => {
         participantCount: participants.length,
       },
       email,
+      adminEmail,
     }, 201);
   } catch (error) {
     console.error('booking creation failed', error);
