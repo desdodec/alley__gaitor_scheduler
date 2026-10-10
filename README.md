@@ -174,13 +174,9 @@ The health endpoint should report these key states as `true` on a healthy produc
 }
 ```
 
-The configured booking email sender is:
+The production booking sender is configured at runtime through `BOOKING_EMAIL_FROM`. Do not commit the production sender value into the repository.
 
-```text
-Alley Gaitor <bookings@tessellation.co.uk>
-```
-
-The Resend domain `tessellation.co.uk` has been verified and successful booking confirmation email delivery has already been demonstrated.
+The Resend sending domain has been verified and successful booking confirmation email delivery has already been demonstrated.
 
 ## Live smoke testing
 
