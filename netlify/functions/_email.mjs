@@ -37,6 +37,8 @@ async function sendEmail({ to, subject, html, text, idempotencyKey, category, re
     return { sent: false, reason: 'email_not_configured' };
   }
 
+  const replyTo = process.env.BOOKING_REPLY_TO || process.env.BOOKING_ADMIN_EMAIL || undefined;
+
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
@@ -47,6 +49,7 @@ async function sendEmail({ to, subject, html, text, idempotencyKey, category, re
     body: JSON.stringify({
       from: process.env.BOOKING_EMAIL_FROM,
       to: [to],
+      reply_to: replyTo,
       subject,
       html,
       text,
@@ -104,6 +107,7 @@ export async function sendBookingConfirmation({
       </div>
       ${manageButton}
       <p>${manageUrl ? 'Use the secure link above to reschedule or cancel without creating an account. ' : ''}Please keep your booking reference as a fallback.</p>
+      <p>You can reply to this email if you need help.</p>
       <p style="color:#666;font-size:13px;margin-top:28px">This email was sent because this address was used to make an Alley Gaitor booking.</p>
     </div>
   `;
@@ -120,6 +124,7 @@ export async function sendBookingConfirmation({
     '',
     manageUrl ? `Manage booking: ${manageUrl}` : '',
     'Please keep your booking reference as a fallback.',
+    'You can reply to this email if you need help.',
   ].filter(Boolean).join('\n');
 
   return sendEmail({
@@ -165,6 +170,7 @@ export async function sendBookingActionConfirmation({
         <p style="margin:0"><strong>Participant${participants.length === 1 ? '' : 's'}:</strong> ${escapeHtml(names)}</p>
       </div>
       <p>Please keep your booking reference as a fallback.</p>
+      <p>You can reply to this email if you need help.</p>
       <p style="color:#666;font-size:13px;margin-top:28px">This email confirms a change made through the secure Alley Gaitor booking-management link.</p>
     </div>
   `;
@@ -181,6 +187,7 @@ export async function sendBookingActionConfirmation({
     `Participants: ${names}`,
     '',
     'Please keep your booking reference as a fallback.',
+    'You can reply to this email if you need help.',
   ].filter(Boolean).join('\n');
 
   const actionKey = isCancelled
