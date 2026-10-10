@@ -12,6 +12,7 @@ export default defineConfig({
         sessions: resolve(process.cwd(), 'sessions.html'),
         access: resolve(process.cwd(), 'access.html'),
         manage: resolve(process.cwd(), 'manage.html'),
+        contact: resolve(process.cwd(), 'contact.html'),
       },
     },
   },
